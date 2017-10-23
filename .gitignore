@@ -3,3 +3,5 @@ out
 target
 *.iml
 log
+src/main/java/testing/
+patches/
