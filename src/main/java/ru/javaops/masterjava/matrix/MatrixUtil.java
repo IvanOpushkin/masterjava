@@ -1,8 +1,7 @@
 package ru.javaops.masterjava.matrix;
 
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 
 /**
  * gkislin
@@ -10,13 +9,95 @@ import java.util.concurrent.ExecutorService;
  */
 public class MatrixUtil {
 
+ /*   private static final ExecutorService matrixMultiplyService = Executors.newFixedThreadPool(10);*/
+
     // TODO implement parallel multiplication matrixA*matrixB
     public static int[][] concurrentMultiply(int[][] matrixA, int[][] matrixB, ExecutorService executor) throws InterruptedException, ExecutionException {
         final int matrixSize = matrixA.length;
+        /*По кусочкам всё записывается в матрицу, не вся*/
         final int[][] matrixC = new int[matrixSize][matrixSize];
+        final int[][] matrixBCopy = new int[matrixSize][matrixSize];
+
+        /*(Идея)Возможно тут можно с таймером всё расчитать, если процессорные мощности симметричны. Пул заполненный всегда шире*/
+        for (int i = 0 ; i < matrixSize; i++)
+            for (int j = 0 ; j < matrixSize; j++)
+                /*Прописанно в компиляторе УЖЕ по работе с кэшами (Строко мощь) НО ЗНАТЬ*/
+                matrixBCopy[i][j] = matrixB[j][i];
+
+
+
+
+        /*Итого Пускаем в разные потоки по половине i,j (Simple First Concurrent Optimization)*/
+
+        /*(ДЕТАЛЬ)Возможно нужно проверять экзекутор и ставить если больше MainMatrix. ThreadNumber 10. Если больше 10.*/
+
+        //Как я понял теряются значения, потому что массивы не успевают заполница mb, а их уже читают в другом потоке
+
+        //Спокойно должен пройти вариант Чётное. Нечётное по идее
+
+        //region ПЕРЕМНОЖЕНИЕ ЧЁТНЫХ СТРОК (И СТОЛБЦОВ)
+        executor.submit(new Runnable(){
+            @Override
+            public void run()  {
+
+
+                //Чётные строки перебор
+                for (int i = 0 ; i < matrixSize; i=+2)
+                    //Весь перебор множителя под конкретную строку
+                    for (int j = 0 ; j < matrixSize; j++)
+                    {
+                        int sum=0;
+
+                        for(int k=0;  k < matrixSize; k++)
+                            sum+=matrixA[i][k]*matrixBCopy[j][k];
+
+                        /*System.out.println(sum);*/
+                        matrixC[i][j] = sum;
+                    }
+            }
+        });
+        //endregion
+
+        //region ПЕРЕМНОЖЕНИЕ НЕЧЁТНЫХ СТРОК (И СТОЛБЦОВ)
+
+        executor.submit(new Runnable(){
+            @Override
+            public void run()  {
+
+                //Нечётные строки перебор
+                for (int i = 1 ; i < matrixSize; i=+2)
+                    //Весь перебор множителя под конкретную строку
+                    for (int j = 1 ; j < matrixSize; j++)
+                    {
+                        int sum=0;
+
+                        for(int k=0;  k < matrixSize; k++)
+                            sum+=matrixA[i][k]*matrixBCopy[j][k];
+
+
+                        /*System.out.println(sum);
+                        * if(i==2 && j==2) System.out.println(sum);
+                        * */
+
+                        matrixC[i][j] = sum;
+                    }
+
+
+            }
+        });
+        //(K)ЗАПОЛНЕНИЕ НЕЧЁТНЫХ
+        //endregion
+
+
+        /*Микс Блок-Очереди и Экзекютора = КомплетионСервис
+        //final CompletionService<int[][]> completionService = new ExecutorCompletionService<>(executor);
+
+        //completionService.submit(Callable<int[][])>);*/
 
         return matrixC;
+
     }
+
 
     // TODO optimize by https://habrahabr.ru/post/114797/
     public static int[][] singleThreadMultiply(int[][] matrixA, int[][] matrixB) {
@@ -65,12 +146,11 @@ public class MatrixUtil {
                     matrixC[i][j] = sum;
                 }
             }
-        }catch(IndexOutOfBoundsException ignore)
-        {
+        } catch (IndexOutOfBoundsException ignore) {
             //На случай выхода за массив = выгодно.
         }
-            return matrixC;
-        }
+        return matrixC;
+    }
 
 
     public static int[][] create(int size) {
@@ -90,7 +170,10 @@ public class MatrixUtil {
         for (int i = 0; i < matrixSize; i++) {
             for (int j = 0; j < matrixSize; j++) {
                 if (matrixA[i][j] != matrixB[i][j]) {
+
+                    System.out.println(i + " " + j);
                     return false;
+
                 }
             }
         }

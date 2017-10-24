@@ -1,17 +1,65 @@
 package ru.javaops.masterjava.service;
 
+import java.security.acl.Group;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MailService {
-    private static final String OK = "OK";
 
+    private static final String OK = "OK";
     private static final String INTERRUPTED_BY_FAULTS_NUMBER = "+++ Interrupted by faults number";
     private static final String INTERRUPTED_BY_TIMEOUT = "+++ Interrupted by timeout";
     private static final String INTERRUPTED_EXCEPTION = "+++ InterruptedException";
+    private final ExecutorService mailService = Executors.newFixedThreadPool(8);
 
     public GroupResult sendToList(final String template, final Set<String> emails) throws Exception {
+
+      List<Future<MailResult>> futures = new ArrayList<Future<MailResult>>();
+
+
+      //Для такой оптимизации нужен отдельный метод, но тогда он будет вызываться каждый раз тоже, непонятно
+        /*
+      Callable<MailResult> x = new Callable<MailResult>(){
+          //Без лямбды.
+          @Override
+          public MailResult call() throws Exception {
+              return sendToUser(template,email);
+          }
+      };
+      */
+
+      for (String email : emails) {
+            //Для получение доп результата для проверки отправки, а не только вызова кол и процесса
+            //Введём Future тип переменных, для проверки отправки. Самбит оставляет именно Future<>;
+
+            //Коллабл ананимно реализовываем, вставляю в реализацию реальный процесс.
+            Future<MailResult> future = mailService.submit(new Callable<MailResult>() {
+                                  //Без лямбды.
+                                   @Override
+                                   public MailResult call() throws Exception {
+                                       return sendToUser(template,email);
+                                   }
+                               });
+
+            futures.add(future);
+
+            return new Callable<GroupResult>(){
+                @Override
+                public GroupResult call() throws Exception {
+                    return null;
+                }
+            }.call();
+
+
+        }
+
+
         return new GroupResult(0, Collections.emptyList(), null);
     }
 
@@ -31,6 +79,11 @@ public class MailService {
         private final String email;
         private final String result;
 
+        private MailResult(String email, String cause) {
+            this.email = email;
+            this.result = cause;
+        }
+
         private static MailResult ok(String email) {
             return new MailResult(email, OK);
         }
@@ -41,11 +94,6 @@ public class MailService {
 
         public boolean isOk() {
             return OK.equals(result);
-        }
-
-        private MailResult(String email, String cause) {
-            this.email = email;
-            this.result = cause;
         }
 
         @Override
