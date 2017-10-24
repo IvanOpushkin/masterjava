@@ -30,9 +30,9 @@ public class MainMatrix {
             singleThreadSum += duration;
 
             System.out.println(matrixC[0][1]);
-            System.out.println(matrixC[0][2]);
-            System.out.println(matrixC[0][3]);
-            System.out.println(matrixC[0][4]);
+            System.out.println(matrixC[0][21]);
+            System.out.println(matrixC[0][32]);
+            System.out.println(matrixC[0][543]);
 
 
             start = System.currentTimeMillis();
@@ -43,9 +43,9 @@ public class MainMatrix {
 
 
             System.out.println(concurrentMatrixC[0][1]);
-            System.out.println(concurrentMatrixC[0][2]);
-            System.out.println(concurrentMatrixC[0][3]);
-            System.out.println(concurrentMatrixC[0][4]);
+            System.out.println(concurrentMatrixC[0][21]);
+            System.out.println(concurrentMatrixC[0][32]);
+            System.out.println(concurrentMatrixC[0][543]);
 
             if (!MatrixUtil.compare(matrixC, concurrentMatrixC)) {
                 System.err.println("Comparison failed");

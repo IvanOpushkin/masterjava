@@ -94,6 +94,8 @@ public class MatrixUtil {
 
         //completionService.submit(Callable<int[][])>);*/
 
+
+
         return matrixC;
 
     }
@@ -121,12 +123,10 @@ public class MatrixUtil {
 
 //п19 вынос за скобку общего и перемножение банально без вынесенго за скобку AB-DA=(B-D)*A ПРОФЕССОР LOGIC
 
-
+        int[] bRow = new int[matrixSize];
+        //Была ошибка каждый ряд обнулялся
         try {
             for (int i = 0; i < matrixSize; i++) {
-
-                int[] bRow = new int[matrixSize];
-
                 for (int k = 0; k < matrixSize; k++)
                     bRow[k] = matrixB[k][i]; //переворот столбца в строку (automatic)
 
