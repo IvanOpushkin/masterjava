@@ -244,9 +244,9 @@ public class MatrixUtil {
                         // sum += matrixA[i][k] * optimize[j][k];
 
                     }
-                    //ВОТ ЭТОТ МОМЕНТ Я НЕ ПОНЯЛ
+                    //ВОТ ЭТОТ МОМЕНТ Я НЕ ПОНЯ
                     matrixC[j][i] = sum;
-                    //ВОТ ЭТОТ МОМЕНТ Я НЕ ПОНЯЛ
+                    //ВОТ ЭТОТ МОМЕНТ Я НЕ ПОНЯ
                 }
             }
         } catch (IndexOutOfBoundsException ignore) {
