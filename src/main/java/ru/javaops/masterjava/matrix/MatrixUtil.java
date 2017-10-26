@@ -15,25 +15,94 @@ public class MatrixUtil {
     /*public static boolean first = false;
     public static boolean second = false;*/
 
+    /*
+    public GroupResult sendToList(final String template, final Set<String> emails) throws Exception {
+        final CompletionService<MailResult> completionService = new ExecutorCompletionService<>(mailExecutor);
+
+        List<Future<MailResult>> futures = emails.stream()
+                .map(email -> completionService.submit(() -> sendToUser(template, email)))
+                .collect(Collectors.toList());
+
+        return new Callable<GroupResult>() {
+            private int success = 0;
+            private List<MailResult> failed = new ArrayList<>();
+
+            @Override
+            public GroupResult call() {
+                while (!futures.isEmpty()) {
+                    try {
+                        Future<MailResult> future = completionService.poll(10, TimeUnit.SECONDS);
+                        if (future == null) {
+                            return cancelWithFail(INTERRUPTED_BY_TIMEOUT);
+                        }
+                        futures.remove(future);
+                        MailResult mailResult = future.get();
+                        if (mailResult.isOk()) {
+                            success++;
+                        } else {
+                            failed.add(mailResult);
+                            if (failed.size() >= 5) {
+                                return cancelWithFail(INTERRUPTED_BY_FAULTS_NUMBER);
+                            }
+                        }
+                    } catch (ExecutionException e) {
+                        return cancelWithFail(e.getCause().toString());
+                    } catch (InterruptedException e) {
+                        return cancelWithFail(INTERRUPTED_EXCEPTION);
+                    }
+                }
+
+                return new GroupResult(success, failed, null);
+}
+
+    private GroupResult cancelWithFail(String cause) {
+        futures.forEach(f -> f.cancel(true));
+        return new GroupResult(success, failed, cause);
+    }
+}.call();
+        }
+     */
+
+    /*
+                for (Future<MailResult> future : futures) {
+                    MailResult mailResult;
+                    try {
+                        mailResult = future.get(10, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                        return cancelWithFail(INTERRUPTED_EXCEPTION);
+                    } catch (ExecutionException e) {
+                        return cancelWithFail(e.getCause().toString());
+                    } catch (TimeoutException e) {
+                        return cancelWithFail(INTERRUPTED_BY_TIMEOUT);
+                    }
+                    if (mailResult.isOk()) {
+                        success++;
+                    } else {
+                        failed.add(mailResult);
+                        if (failed.size() >= 5) {
+                            return cancelWithFail(INTERRUPTED_BY_FAULTS_NUMBER);
+                        }
+                    }
+                }
+*/
 
     // TODO implement parallel multiplication matrixA*matrixB
     public static int[][] concurrentMultiply(int[][] matrixA, int[][] matrixB, ExecutorService executor) throws InterruptedException, ExecutionException {
+
+
         final int matrixSize = matrixA.length;
         /*По кусочкам всё записывается в матрицу, не вся*/
         final int[][] matrixC = new int[matrixSize][matrixSize];
         final int[][] matrixBCopy = new int[matrixSize][matrixSize];
+
+        //final CompletionService<String> completionService = new ExecutorCompletionService<>(executor);
+
 
         /*(Идея)Возможно тут можно с таймером всё расчитать, если процессорные мощности симметричны. Пул заполненный всегда шире*/
         for (int i = 0 ; i < matrixSize; i++)
             for (int j = 0 ; j < matrixSize; j++)
                 /*Прописанно в компиляторе УЖЕ по работе с кэшами (Строко мощь) НО ЗНАТЬ*/
                 matrixBCopy[i][j] = matrixB[j][i];
-
-
-
-
-
-
 
         /*Итого Пускаем в разные потоки по половине i,j (Simple First Concurrent Optimization)*/
 
@@ -50,36 +119,9 @@ public class MatrixUtil {
             public String call()  {
 
                 //Чётные строки перебор
-                for (int i = 0 ; i < matrixSize; i=+2)
+                for (int i = 0 ; i < matrixSize; i+=2)
                     //Весь перебор множителя под конкретную строку
                     for (int j = 0 ; j < matrixSize; j++)
-                    {
-                        int sum=0;
-
-                        for(int k=0;  k < matrixSize; k++)
-                            sum+=matrixA[i][k]*matrixBCopy[j][k];
-
-                        /*System.out.println(sum);*/
-                        matrixC[i][j] = sum;
-                       /* if (i==matrixSize-2 && j==matrixSize-1)
-                            first = true;*/
-                    }
-                    return String;
-            }
-        });
-
-        //endregion
-
-        //region ПЕРЕМНОЖЕНИЕ НЕЧЁТНЫХ СТРОК (И СТОЛБЦОВ)
-
-        Future<String> okey2 = executor.submit(new Callable<String>(){
-            @Override
-            public String call()  {
-
-                //Нечётные строки перебор
-                for (int i = 1 ; i < matrixSize; i=+2)
-                    //Весь перебор множителя под конкретную строку
-                    for (int j = 1 ; j < matrixSize; j++)
                     {
                         int sum=0;
 
@@ -97,11 +139,59 @@ public class MatrixUtil {
 
                     }
 
+                return null;
 
+            }
+        });
+
+
+
+        //endregion
+
+       //region ПЕРЕМНОЖЕНИЕ НЕЧЁТНЫХ СТРОК (И СТОЛБЦОВ)
+
+        Future<String> okey2 = executor.submit(new Callable<String>(){
+            @Override
+            public String call()  {
+
+                //Нечётные строки перебор
+                for (int i = 1 ; i < matrixSize; i+=2)
+                    //Весь перебор множителя под конкретную строку
+                    for (int j = 0 ; j < matrixSize; j++)
+                    {
+                        int sum=0;
+
+                        for(int k=0;  k < matrixSize; k++)
+                            sum+=matrixA[i][k]*matrixBCopy[j][k];
+
+
+                        /*System.out.println(sum);
+                        * if(i==2 && j==2) System.out.println(sum);
+                        * */
+
+                        matrixC[i][j] = sum;
+                        /*if (i==matrixSize-1 && j==matrixSize-1)
+                            second = true;*/
+
+                    }
+
+                        return null;
             }
         });
         //(K)ЗАПОЛНЕНИЕ НЕЧЁТНЫХ
         //endregion
+
+
+        //System.out.println(okey.isDone());
+        //System.out.println(okey2.isDone());
+
+        okey.get();
+        okey2.get();
+
+        //System.out.println(okey.isDone());
+       // System.out.println(okey2.isDone());
+
+
 
 
         /*Микс Блок-Очереди и Экзекютора = КомплетионСервис
@@ -113,9 +203,9 @@ public class MatrixUtil {
         //thread.join();
 
 
+
         //executor.invokeAll();
 
-        System.out.println(matrixC[999][999]);
 
         return matrixC;
 
@@ -130,7 +220,41 @@ public class MatrixUtil {
 
         final int[][] matrixC = new int[matrixSize][matrixSize];
 
+        //п19 вынос за скобку общего и перемножение банально без вынесенго за скобку AB-DA=(B-D)*A ПРОФЕССОР LOGIC
 
+        int[] bRow = new int[matrixSize];
+        //Была ошибка каждый ряд обнулялся
+        try {
+            for (int i = 0; ; i++)
+            {
+                for (int k = 0; k < matrixSize; k++)
+                    bRow[k] = matrixB[k][i]; //переворот столбца в строку (automatic)
+
+
+                for (int j = 0; j < matrixSize; j++)
+                {
+                    int sum = 0;
+                    int[] rowA = matrixA[j];//строки в А нас устраивают изначально
+                    for (int k = 0; k < matrixSize; k++) {
+                        sum += bRow[k] * rowA[k];
+
+
+                        //заменили матрикс б на нашу перевернутую
+                        // sum += matrixA[i][k] * matrixB[k][j];
+                        // sum += matrixA[i][k] * optimize[j][k];
+
+                    }
+                    //ВОТ ЭТОТ МОМЕНТ Я НЕ ПОНЯЛ
+                    matrixC[j][i] = sum;
+                    //ВОТ ЭТОТ МОМЕНТ Я НЕ ПОНЯЛ
+                }
+            }
+        } catch (IndexOutOfBoundsException ignore) {
+            //На случай выхода за массив = выгодно.
+        }
+
+
+/*
         for (int i = 0; i < matrixSize; i++) {
             for (int j = 0; j < matrixSize; j++) {
                 int sum = 0;
@@ -140,6 +264,7 @@ public class MatrixUtil {
                 matrixC[i][j] = sum;
             }
         }
+        */
 
 
         //2.п переносим столбцы в строки второй таблицы
@@ -153,36 +278,8 @@ public class MatrixUtil {
             }
 
 */
-/*
-//п19 вынос за скобку общего и перемножение банально без вынесенго за скобку AB-DA=(B-D)*A ПРОФЕССОР LOGIC
-
-        int[] bRow = new int[matrixSize];
-        //Была ошибка каждый ряд обнулялся
-        try {
-            for (int i = 0; i < matrixSize; i++) {
-                for (int k = 0; k < matrixSize; k++)
-                    bRow[k] = matrixB[k][i]; //переворот столбца в строку (automatic)
 
 
-                for (int j = 0; j < matrixSize; j++) {
-                    int sum = 0;
-                    int[] rowA = matrixA[j];//строки в А нас устраивают изначально
-                    for (int k = 0; k < matrixSize; k++) {
-                        sum += bRow[k] * rowA[k];
-
-
-                        //заменили матрикс б на нашу перевернутую
-                        // sum += matrixA[i][k] * matrixB[k][j];
-                        // sum += matrixA[i][k] * optimize[j][k];
-
-                    }
-                    matrixC[i][j] = sum;
-                }
-            }
-        } catch (IndexOutOfBoundsException ignore) {
-            //На случай выхода за массив = выгодно.
-        }
-        */
         return matrixC;
     }
 

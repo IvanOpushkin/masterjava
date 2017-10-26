@@ -29,12 +29,16 @@ public class MainMatrix {
             out("Single thread time, sec: %.3f", duration);
             singleThreadSum += duration;
 
+            //System.out.println(matrixC[0][0] + "okey");
+
+            /*
             System.out.println(matrixC[0][1]);
             System.out.println(matrixC[0][21]);
             System.out.println(matrixC[0][32]);
             System.out.println(matrixC[0][543]);
 
             System.out.println(matrixC[1][0]);
+            */
 
 
 
@@ -45,13 +49,17 @@ public class MainMatrix {
             out("Concurrent thread time, sec: %.3f", duration);
             concurrentThreadSum += duration;
 
+            //System.out.println(concurrentMatrixC[0][0] + "okey");
 
+
+            /*
             System.out.println(concurrentMatrixC[1][0]);
 
             System.out.println(concurrentMatrixC[0][1]);
             System.out.println(concurrentMatrixC[0][21]);
             System.out.println(concurrentMatrixC[0][32]);
             System.out.println(concurrentMatrixC[0][543]);
+            */
 
             if (!MatrixUtil.compare(matrixC, concurrentMatrixC)) {
                 System.err.println("Comparison failed");
