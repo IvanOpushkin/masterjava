@@ -1,7 +1,5 @@
 package ru.javaops.masterjava.matrix;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.*;
 
@@ -11,84 +9,9 @@ import java.util.concurrent.*;
  */
 public class MatrixUtil {
 
- /*   private static final ExecutorService matrixMultiplyService = Executors.newFixedThreadPool(10);*/
-    /*public static boolean first = false;
-    public static boolean second = false;*/
-
-    /*
-    public GroupResult sendToList(final String template, final Set<String> emails) throws Exception {
-        final CompletionService<MailResult> completionService = new ExecutorCompletionService<>(mailExecutor);
-
-        List<Future<MailResult>> futures = emails.stream()
-                .map(email -> completionService.submit(() -> sendToUser(template, email)))
-                .collect(Collectors.toList());
-
-        return new Callable<GroupResult>() {
-            private int success = 0;
-            private List<MailResult> failed = new ArrayList<>();
-
-            @Override
-            public GroupResult call() {
-                while (!futures.isEmpty()) {
-                    try {
-                        Future<MailResult> future = completionService.poll(10, TimeUnit.SECONDS);
-                        if (future == null) {
-                            return cancelWithFail(INTERRUPTED_BY_TIMEOUT);
-                        }
-                        futures.remove(future);
-                        MailResult mailResult = future.get();
-                        if (mailResult.isOk()) {
-                            success++;
-                        } else {
-                            failed.add(mailResult);
-                            if (failed.size() >= 5) {
-                                return cancelWithFail(INTERRUPTED_BY_FAULTS_NUMBER);
-                            }
-                        }
-                    } catch (ExecutionException e) {
-                        return cancelWithFail(e.getCause().toString());
-                    } catch (InterruptedException e) {
-                        return cancelWithFail(INTERRUPTED_EXCEPTION);
-                    }
-                }
-
-                return new GroupResult(success, failed, null);
-}
-
-    private GroupResult cancelWithFail(String cause) {
-        futures.forEach(f -> f.cancel(true));
-        return new GroupResult(success, failed, cause);
-    }
-}.call();
-        }
-     */
-
-    /*
-                for (Future<MailResult> future : futures) {
-                    MailResult mailResult;
-                    try {
-                        mailResult = future.get(10, TimeUnit.SECONDS);
-                    } catch (InterruptedException e) {
-                        return cancelWithFail(INTERRUPTED_EXCEPTION);
-                    } catch (ExecutionException e) {
-                        return cancelWithFail(e.getCause().toString());
-                    } catch (TimeoutException e) {
-                        return cancelWithFail(INTERRUPTED_BY_TIMEOUT);
-                    }
-                    if (mailResult.isOk()) {
-                        success++;
-                    } else {
-                        failed.add(mailResult);
-                        if (failed.size() >= 5) {
-                            return cancelWithFail(INTERRUPTED_BY_FAULTS_NUMBER);
-                        }
-                    }
-                }
-*/
 
     // TODO implement parallel multiplication matrixA*matrixB
     public static int[][] concurrentMultiply(int[][] matrixA, int[][] matrixB, ExecutorService executor) throws InterruptedException, ExecutionException {
-
 
         final int matrixSize = matrixA.length;
         /*По кусочкам всё записывается в матрицу, не вся*/
@@ -212,6 +135,11 @@ public class MatrixUtil {
     }
 
 
+
+   //Простая зеркальность. (Допустим таблицу 2 на 2.) Ход перемножения крестом.
+    //Если постоянная строка, заполняется строка Суммами с столбцо перемножения.
+    //Если постоянный столбец, заполняется столбец Суммами со строками перемножения.
+
     // TODO optimize by https://habrahabr.ru/post/114797/
     public static int[][] singleThreadMultiply(int[][] matrixA, int[][] matrixB) {
 
@@ -220,33 +148,30 @@ public class MatrixUtil {
 
         final int[][] matrixC = new int[matrixSize][matrixSize];
 
-        //п19 вынос за скобку общего и перемножение банально без вынесенго за скобку AB-DA=(B-D)*A ПРОФЕССОР LOGIC
+        int[] bColumn = new int[matrixSize];
 
-        int[] bRow = new int[matrixSize];
-        //Была ошибка каждый ряд обнулялся
         try {
             for (int i = 0; ; i++)
             {
                 for (int k = 0; k < matrixSize; k++)
-                    bRow[k] = matrixB[k][i]; //переворот столбца в строку (automatic)
+                    bColumn[k] = matrixB[k][i]; //переворот столбца в строку (automatic)
 
 
                 for (int j = 0; j < matrixSize; j++)
                 {
                     int sum = 0;
-                    int[] rowA = matrixA[j];//строки в А нас устраивают изначально
+                    //(Смешенно заполняеца уф) Как бы крестом всё идёт.
+                    int[] rowA = matrixA[j];
                     for (int k = 0; k < matrixSize; k++) {
-                        sum += bRow[k] * rowA[k];
-
-
-                        //заменили матрикс б на нашу перевернутую
-                        // sum += matrixA[i][k] * matrixB[k][j];
-                        // sum += matrixA[i][k] * optimize[j][k];
+                        sum += bColumn[k] * rowA[k];
+                        //Постоянный столбец на сменяемую строку(во втором цикле, не 3),
+                        // итого нужно заполнять по столбцам в C
 
                     }
-                    //ВОТ ЭТОТ МОМЕНТ Я НЕ ПОНЯ
-                    matrixC[j][i] = sum;
-                    //ВОТ ЭТОТ МОМЕНТ Я НЕ ПОНЯ
+//ОЙ ЧТО НЕ ПОНИМАЮ (Смешенно заполняеца уф)
+                     matrixC[j][i] = sum;
+//ВОТ ЭТОТ МОМЕНТ Я НЕ ПОНЯ.
+
                 }
             }
         } catch (IndexOutOfBoundsException ignore) {
@@ -259,8 +184,12 @@ public class MatrixUtil {
             for (int j = 0; j < matrixSize; j++) {
                 int sum = 0;
                 for (int k = 0; k < matrixSize; k++) {
-                    sum += matrixA[i][k] * matrixB[k][j];
+                //Строка А * Столбец Б
+                    sum += matrixA[i][k]  * matrixB[k][j];
+                    //Постоянная строка на сменяемый столбец (во втором цикле, не 3), итого заполнять по строкам в C
+
                 }
+
                 matrixC[i][j] = sum;
             }
         }
