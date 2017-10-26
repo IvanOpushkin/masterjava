@@ -1,5 +1,7 @@
 package ru.javaops.masterjava.matrix;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.*;
 
@@ -10,6 +12,9 @@ import java.util.concurrent.*;
 public class MatrixUtil {
 
  /*   private static final ExecutorService matrixMultiplyService = Executors.newFixedThreadPool(10);*/
+    /*public static boolean first = false;
+    public static boolean second = false;*/
+
 
     // TODO implement parallel multiplication matrixA*matrixB
     public static int[][] concurrentMultiply(int[][] matrixA, int[][] matrixB, ExecutorService executor) throws InterruptedException, ExecutionException {
@@ -27,6 +32,9 @@ public class MatrixUtil {
 
 
 
+
+
+
         /*Итого Пускаем в разные потоки по половине i,j (Simple First Concurrent Optimization)*/
 
         /*(ДЕТАЛЬ)Возможно нужно проверять экзекутор и ставить если больше MainMatrix. ThreadNumber 10. Если больше 10.*/
@@ -36,10 +44,10 @@ public class MatrixUtil {
         //Спокойно должен пройти вариант Чётное. Нечётное по идее
 
         //region ПЕРЕМНОЖЕНИЕ ЧЁТНЫХ СТРОК (И СТОЛБЦОВ)
-        executor.submit(new Runnable(){
-            @Override
-            public void run()  {
 
+      Future<String> okey = executor.submit(new Callable<String>(){
+            @Override
+            public String call()  {
 
                 //Чётные строки перебор
                 for (int i = 0 ; i < matrixSize; i=+2)
@@ -53,16 +61,20 @@ public class MatrixUtil {
 
                         /*System.out.println(sum);*/
                         matrixC[i][j] = sum;
+                       /* if (i==matrixSize-2 && j==matrixSize-1)
+                            first = true;*/
                     }
+                    return String;
             }
         });
+
         //endregion
 
         //region ПЕРЕМНОЖЕНИЕ НЕЧЁТНЫХ СТРОК (И СТОЛБЦОВ)
 
-        executor.submit(new Runnable(){
+        Future<String> okey2 = executor.submit(new Callable<String>(){
             @Override
-            public void run()  {
+            public String call()  {
 
                 //Нечётные строки перебор
                 for (int i = 1 ; i < matrixSize; i=+2)
@@ -80,6 +92,9 @@ public class MatrixUtil {
                         * */
 
                         matrixC[i][j] = sum;
+                        /*if (i==matrixSize-1 && j==matrixSize-1)
+                            second = true;*/
+
                     }
 
 
@@ -94,7 +109,13 @@ public class MatrixUtil {
 
         //completionService.submit(Callable<int[][])>);*/
 
+        //Thread thread = new Thread();
+        //thread.join();
 
+
+        //executor.invokeAll();
+
+        System.out.println(matrixC[999][999]);
 
         return matrixC;
 
@@ -109,6 +130,18 @@ public class MatrixUtil {
 
         final int[][] matrixC = new int[matrixSize][matrixSize];
 
+
+        for (int i = 0; i < matrixSize; i++) {
+            for (int j = 0; j < matrixSize; j++) {
+                int sum = 0;
+                for (int k = 0; k < matrixSize; k++) {
+                    sum += matrixA[i][k] * matrixB[k][j];
+                }
+                matrixC[i][j] = sum;
+            }
+        }
+
+
         //2.п переносим столбцы в строки второй таблицы
 /*
         int[][] optimize = new int[matrixSize][matrixSize];
@@ -120,7 +153,7 @@ public class MatrixUtil {
             }
 
 */
-
+/*
 //п19 вынос за скобку общего и перемножение банально без вынесенго за скобку AB-DA=(B-D)*A ПРОФЕССОР LOGIC
 
         int[] bRow = new int[matrixSize];
@@ -149,6 +182,7 @@ public class MatrixUtil {
         } catch (IndexOutOfBoundsException ignore) {
             //На случай выхода за массив = выгодно.
         }
+        */
         return matrixC;
     }
 

@@ -34,6 +34,10 @@ public class MainMatrix {
             System.out.println(matrixC[0][32]);
             System.out.println(matrixC[0][543]);
 
+            System.out.println(matrixC[1][0]);
+
+
+
 
             start = System.currentTimeMillis();
             final int[][] concurrentMatrixC = MatrixUtil.concurrentMultiply(matrixA, matrixB, executor);
@@ -41,6 +45,8 @@ public class MainMatrix {
             out("Concurrent thread time, sec: %.3f", duration);
             concurrentThreadSum += duration;
 
+
+            System.out.println(concurrentMatrixC[1][0]);
 
             System.out.println(concurrentMatrixC[0][1]);
             System.out.println(concurrentMatrixC[0][21]);
