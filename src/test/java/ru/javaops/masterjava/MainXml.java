@@ -138,3 +138,62 @@ public class MainXml {
         }
     }
 }
+
+/*
+<!-- Так ни одного Депенденси не было -->
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core -->
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.19</version>
+        </dependency>
+
+        <!-- НЕТУ МЕТОДА СПЛИТТЕР В ЭТОЙ ВЕРСИИ google.guava
+        https://mvnrepository.com/artifact/com.google.guava/guava -->
+
+        <!--
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>r05</version>
+        </dependency>
+        -->
+
+        <!-- (K)НЕТУ МЕТОДА СПЛИТТЕР В ЭТОЙ ВЕРСИИ google.guava
+        https://mvnrepository.com/artifact/com.google.guava/guava -->
+
+        <dependency>
+            <groupId>one.util</groupId>
+            <artifactId>streamex</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+
+        <!--Test-->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.j2html/j2html -->
+        <dependency>
+            <groupId>com.j2html</groupId>
+            <artifactId>j2html</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>23.3-jre</version>
+        </dependency>
+
+
+    </dependencies>
+
+
+    <!--(K) Так ни одного Депенденси не было -->
+ */
+
